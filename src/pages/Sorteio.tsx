@@ -8,8 +8,13 @@ const Sorteio = () => {
   return (
     <section className="space-y-4">
       <div className="rounded-xl border border-border/60 bg-card/80 p-4 text-sm text-muted-foreground">
-        Etapa 2: configure regras de sorteio e gere novos times.
+        Etapa 2: configure as regras e gere os times. Você pode sortear novamente quantas vezes quiser.
       </div>
+      {players.length < 5 && (
+        <div className="rounded-xl border border-dashed border-border/70 bg-card/70 p-4 text-sm text-muted-foreground">
+          Dica: com menos de 5 jogadores o sorteio fica limitado. Cadastre mais jogadores para resultados melhores.
+        </div>
+      )}
 
       <TeamDrawer players={players} onDrawTeams={drawTeams} />
 
@@ -30,7 +35,7 @@ const Sorteio = () => {
           disabled={teams.length === 0}
           onClick={clearTeams}
         >
-          Limpar times atuais
+          Limpar times atuais e recomeçar
         </Button>
       </div>
     </section>

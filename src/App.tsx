@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Jogadores from "./pages/Jogadores";
 import Sorteio from "./pages/Sorteio";
 import Escalacoes from "./pages/Escalacoes";
+import InstalarApp from "./pages/InstalarApp";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
               <Route path="/jogadores" element={<Jogadores />} />
               <Route path="/sorteio" element={<Sorteio />} />
               <Route path="/escalacoes" element={<Escalacoes />} />
+              <Route path="/instalar" element={<InstalarApp />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

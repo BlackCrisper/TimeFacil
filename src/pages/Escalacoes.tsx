@@ -8,7 +8,7 @@ const Escalacoes = () => {
   return (
     <section className="space-y-4">
       <div className="rounded-xl border border-border/60 bg-card/80 p-4 text-sm text-muted-foreground">
-        Etapa 3: confira as escalações e ajuste seu jogo.
+        Etapa 3: confira as escalações finais, valide equilíbrio e exporte para compartilhar.
       </div>
 
       {(players.length > 0 || teams.length > 0) && (
@@ -21,7 +21,7 @@ const Escalacoes = () => {
         <TeamsDisplay teams={teams} />
       ) : (
         <div className="rounded-xl border border-dashed border-border/70 bg-card/80 p-6 text-center text-sm text-muted-foreground">
-          Ainda não há escalações. Vá para a seção de Sorteio para gerar os times.
+          Ainda não há escalações. Vá para a seção de Sorteio, gere os times e volte aqui para revisar.
         </div>
       )}
     </section>

@@ -1,7 +1,8 @@
-import { Home, Users, Shuffle, ClipboardList } from 'lucide-react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { Home, Users, Shuffle, ClipboardList, Download, X } from 'lucide-react';
+import { NavLink, Outlet, Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAppState } from '@/features/app-state/AppStateContext';
+import { usePwaInstall } from '@/hooks/usePwaInstall';
 
 const links = [
   { to: '/', label: 'Inicio', icon: Home },
@@ -12,6 +13,7 @@ const links = [
 
 const AppShell = () => {
   const { players, teams } = useAppState();
+  const { canInstall, dismissed, install, dismiss } = usePwaInstall();
   const regularTeams = teams.filter((team) => !team.isReserve).length;
 
   return (
@@ -29,6 +31,43 @@ const AppShell = () => {
             <span className="rounded-full bg-card px-3 py-1 text-foreground">Times: {regularTeams}</span>
           </div>
         </header>
+
+        {canInstall && !dismissed && (
+          <div className="mb-4 rounded-xl border border-primary/30 bg-primary/10 p-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="text-sm">
+                <p className="font-semibold text-foreground">Instale o app no seu celular</p>
+                <p className="text-muted-foreground">
+                  Tenha acesso rápido e experiência de aplicativo no dia do jogo.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={dismiss}
+                className="rounded p-1 text-muted-foreground hover:bg-background/60"
+                aria-label="Fechar aviso de instalação"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={() => void install()}
+                className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
+              >
+                <Download className="h-3 w-3" />
+                Instalar agora
+              </button>
+              <Link
+                to="/instalar"
+                className="inline-flex items-center rounded-md border border-border bg-card px-3 py-2 text-xs font-medium text-foreground"
+              >
+                Ver detalhes
+              </Link>
+            </div>
+          </div>
+        )}
 
         <Outlet />
       </div>
