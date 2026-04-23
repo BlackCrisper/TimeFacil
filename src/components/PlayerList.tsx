@@ -4,10 +4,12 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Users, Edit, Trash2, Check, X } from 'lucide-react';
 import { Player, PlayerPosition } from '@/types/player';
 import { getPositionLabel, getPositionEmoji, getPositionColor } from '@/utils/positionUtils';
+import SectionCard from './SectionCard';
 
 interface PlayerListProps {
   players: Player[];
@@ -19,18 +21,23 @@ const PlayerList = ({ players, onUpdatePlayer, onDeletePlayer }: PlayerListProps
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editPosition, setEditPosition] = useState<PlayerPosition>('goleiro');
+  const [editUseSkillLevel, setEditUseSkillLevel] = useState(false);
+  const [editSkillLevel, setEditSkillLevel] = useState(3);
 
   const startEditing = (player: Player) => {
     setEditingId(player.id);
     setEditName(player.name);
     setEditPosition(player.position);
+    setEditUseSkillLevel(player.skillLevel !== undefined);
+    setEditSkillLevel(player.skillLevel ?? 3);
   };
 
   const saveEdit = (player: Player) => {
     if (editName.trim()) {
       onUpdatePlayer(player.id, {
         name: editName.trim(),
-        position: editPosition
+        position: editPosition,
+        skillLevel: editUseSkillLevel ? editSkillLevel : undefined
       });
     }
     setEditingId(null);
@@ -40,6 +47,8 @@ const PlayerList = ({ players, onUpdatePlayer, onDeletePlayer }: PlayerListProps
   const cancelEdit = () => {
     setEditingId(null);
     setEditName('');
+    setEditUseSkillLevel(false);
+    setEditSkillLevel(3);
   };
 
   // Agrupar jogadores por posição
@@ -54,7 +63,7 @@ const PlayerList = ({ players, onUpdatePlayer, onDeletePlayer }: PlayerListProps
   const PlayerCard = ({ player, index }: { player: Player; index: number }) => (
     <Card 
       key={player.id} 
-      className="border p-4 transition-all duration-300 hover:shadow-md animate-fade-in bg-white border-gray-200"
+      className="animate-fade-in border p-4 transition-all duration-300 hover:shadow-md"
       style={{ animationDelay: `${index * 0.05}s` }}
     >
       <div className="flex items-center justify-between">
@@ -83,10 +92,32 @@ const PlayerList = ({ players, onUpdatePlayer, onDeletePlayer }: PlayerListProps
                 <SelectItem value="so-linha">⚽ Só Linha</SelectItem>
               </SelectContent>
             </Select>
+            <div className="flex items-center gap-2 rounded border border-border px-2 py-1">
+              <span className="text-[10px] text-muted-foreground">Nivel</span>
+              <Switch
+                checked={editUseSkillLevel}
+                onCheckedChange={setEditUseSkillLevel}
+                aria-label="Ativar nível técnico"
+              />
+            </div>
+            {editUseSkillLevel && (
+              <Select value={String(editSkillLevel)} onValueChange={(value) => setEditSkillLevel(Number(value))}>
+                <SelectTrigger className="h-8 w-24 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Nivel 1</SelectItem>
+                  <SelectItem value="2">Nivel 2</SelectItem>
+                  <SelectItem value="3">Nivel 3</SelectItem>
+                  <SelectItem value="4">Nivel 4</SelectItem>
+                  <SelectItem value="5">Nivel 5</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
             <Button
               size="sm"
               onClick={() => saveEdit(player)}
-              className="h-8 w-8 p-0 bg-green-600 hover:bg-green-700"
+              className="h-8 w-8 p-0"
             >
               <Check className="h-3 w-3" />
             </Button>
@@ -103,10 +134,15 @@ const PlayerList = ({ players, onUpdatePlayer, onDeletePlayer }: PlayerListProps
           <>
             <div className="flex items-center gap-3 flex-1">
               <span className="text-xl">{getPositionEmoji(player.position)}</span>
-              <span className="text-gray-900 font-medium">{player.name}</span>
+              <span className="font-medium text-foreground">{player.name}</span>
               <Badge className={`text-xs text-white ${getPositionColor(player.position)}`}>
                 {getPositionLabel(player.position)}
               </Badge>
+              {player.skillLevel !== undefined && (
+                <Badge variant="outline" className="text-xs">
+                  Nivel {player.skillLevel}
+                </Badge>
+              )}
             </div>
             
             <div className="flex items-center gap-1">
@@ -114,17 +150,19 @@ const PlayerList = ({ players, onUpdatePlayer, onDeletePlayer }: PlayerListProps
                 size="sm"
                 variant="ghost"
                 onClick={() => startEditing(player)}
-                className="h-8 w-8 p-0 hover:bg-blue-100"
+                className="h-8 w-8 p-0 hover:bg-primary/10"
+                aria-label={`Editar ${player.name}`}
               >
-                <Edit className="h-3 w-3 text-blue-600" />
+                <Edit className="h-3 w-3 text-primary" />
               </Button>
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={() => onDeletePlayer(player.id)}
-                className="h-8 w-8 p-0 hover:bg-red-100"
+                className="h-8 w-8 p-0 hover:bg-destructive/10"
+                aria-label={`Excluir ${player.name}`}
               >
-                <Trash2 className="h-3 w-3 text-red-600" />
+                <Trash2 className="h-3 w-3 text-destructive" />
               </Button>
             </div>
           </>
@@ -134,25 +172,24 @@ const PlayerList = ({ players, onUpdatePlayer, onDeletePlayer }: PlayerListProps
   );
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-3">
-        <Users className="w-6 h-6 text-gray-600" />
-        Jogadores Cadastrados ({players.length})
-      </h2>
-      
+    <SectionCard
+      title={`Jogadores Cadastrados (${players.length})`}
+      icon={<Users className="h-5 w-5" />}
+      iconContainerClassName="bg-secondary text-secondary-foreground"
+    >
       {players.length === 0 ? (
         <div className="text-center py-12 animate-fade-in">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-            <Users className="w-8 h-8 text-gray-400" />
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+            <Users className="h-8 w-8 text-muted-foreground" />
           </div>
-          <p className="text-gray-500 text-lg">Nenhum jogador cadastrado ainda</p>
-          <p className="text-gray-400 text-sm mt-1">Adicione jogadores para começar</p>
+          <p className="text-lg text-muted-foreground">Nenhum jogador cadastrado ainda</p>
+          <p className="mt-1 text-sm text-muted-foreground/80">Adicione jogadores para começar</p>
         </div>
       ) : (
         <div className="space-y-6">
           {Object.entries(playersByPosition).map(([position, positionPlayers]) => (
             <div key={position} className="animate-fade-in">
-              <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center gap-2">
+              <h3 className="mb-3 flex items-center gap-2 text-lg font-medium text-foreground/90">
                 <span className="text-xl">{getPositionEmoji(position as any)}</span>
                 <span>{getPositionLabel(position as any)} ({positionPlayers.length})</span>
               </h3>
@@ -165,7 +202,7 @@ const PlayerList = ({ players, onUpdatePlayer, onDeletePlayer }: PlayerListProps
           ))}
         </div>
       )}
-    </div>
+    </SectionCard>
   );
 };
 

@@ -3,17 +3,21 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Shuffle, AlertCircle } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Shuffle, AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Player } from '@/types/player';
+import { toast } from 'sonner';
+import SectionCard from './SectionCard';
 
 interface TeamDrawerProps {
   players: Player[];
-  onDrawTeams: (playersPerTeam: number) => void;
+  onDrawTeams: (playersPerTeam: number, enforceGoalkeeper: boolean) => void;
 }
 
 const TeamDrawer = ({ players, onDrawTeams }: TeamDrawerProps) => {
   const [playersPerTeam, setPlayersPerTeam] = useState(5);
+  const [enforceGoalkeeper, setEnforceGoalkeeper] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
 
   const goalkeepers = players.filter(p => p.position === 'goleiro');
@@ -22,12 +26,12 @@ const TeamDrawer = ({ players, onDrawTeams }: TeamDrawerProps) => {
   const teamsWithGoalkeepers = Math.min(maxPossibleTeams, goalkeepers.length);
 
   const handleDraw = async () => {
-    if (goalkeepers.length === 0) {
-      alert('É necessário pelo menos 1 goleiro para formar times!');
+    if (enforceGoalkeeper && goalkeepers.length === 0) {
+      toast.error('É necessário pelo menos 1 goleiro para formar times.');
       return;
     }
     if (totalPlayers < playersPerTeam) {
-      alert(`Número insuficiente de jogadores! Você precisa de pelo menos ${playersPerTeam} jogadores.`);
+      toast.error(`Número insuficiente de jogadores. Você precisa de pelo menos ${playersPerTeam} jogadores.`);
       return;
     }
     
@@ -36,22 +40,19 @@ const TeamDrawer = ({ players, onDrawTeams }: TeamDrawerProps) => {
     // Adiciona uma animação de suspense
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    onDrawTeams(playersPerTeam);
+    onDrawTeams(playersPerTeam, enforceGoalkeeper);
     setIsDrawing(false);
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-3">
-        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-          <Shuffle className="w-5 h-5 text-blue-600" />
-        </div>
-        Sortear Times
-      </h2>
-      
+    <SectionCard
+      title="Sortear Times"
+      icon={<Shuffle className="h-5 w-5" />}
+      iconContainerClassName="bg-primary/15 text-primary"
+    >
       <div className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="playersPerTeam" className="text-gray-700 font-medium">
+          <Label htmlFor="playersPerTeam" className="font-medium text-foreground/90">
             Jogadores por Time
           </Label>
           <Input
@@ -61,20 +62,47 @@ const TeamDrawer = ({ players, onDrawTeams }: TeamDrawerProps) => {
             max="11"
             value={playersPerTeam}
             onChange={(e) => setPlayersPerTeam(Number(e.target.value))}
-            className="transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+        
+        <div className="flex items-center justify-between rounded-lg border border-border/70 bg-secondary/40 px-3 py-2">
+          <div>
+            <Label htmlFor="enforceGoalkeeper" className="font-medium text-foreground/90">
+              Exigir goleiro por time
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Desative para sortear sem obrigação de 1 goleiro em cada time.
+            </p>
+          </div>
+          <Switch
+            id="enforceGoalkeeper"
+            checked={enforceGoalkeeper}
+            onCheckedChange={setEnforceGoalkeeper}
           />
         </div>
 
         {totalPlayers > 0 && (
-          <Alert className="bg-blue-50 border-blue-200 animate-fade-in">
-            <AlertCircle className="h-4 w-4 text-blue-600" />
-            <AlertDescription className="text-gray-700">
+          <Alert className="animate-fade-in border-primary/20 bg-primary/5">
+            <AlertCircle className="h-4 w-4 text-primary" />
+            <AlertDescription className="text-foreground/80">
               <div className="space-y-1 text-sm">
                 <p><strong>Total de jogadores:</strong> {totalPlayers}</p>
                 <p><strong>Goleiros disponíveis:</strong> {goalkeepers.length}</p>
-                <p><strong>Times completos possíveis:</strong> {teamsWithGoalkeepers}</p>
+                <p>
+                  <strong>Times completos possíveis:</strong>{' '}
+                  {enforceGoalkeeper ? teamsWithGoalkeepers : maxPossibleTeams}
+                </p>
+                <p>
+                  <strong>Modo:</strong>{' '}
+                  {enforceGoalkeeper
+                    ? 'Balanceamento avançado com goleiro obrigatório'
+                    : 'Balanceamento avançado sem obrigar goleiro por time'}
+                </p>
                 {totalPlayers % playersPerTeam > 0 && (
-                  <p><strong>Jogadores no time reserva:</strong> {totalPlayers - (teamsWithGoalkeepers * playersPerTeam)}</p>
+                  <p>
+                    <strong>Jogadores no time reserva:</strong>{' '}
+                    {totalPlayers - ((enforceGoalkeeper ? teamsWithGoalkeepers : maxPossibleTeams) * playersPerTeam)}
+                  </p>
                 )}
               </div>
             </AlertDescription>
@@ -83,14 +111,12 @@ const TeamDrawer = ({ players, onDrawTeams }: TeamDrawerProps) => {
 
         <Button
           onClick={handleDraw}
-          disabled={totalPlayers === 0 || goalkeepers.length === 0 || isDrawing}
-          className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 transform ${
-            isDrawing ? 'scale-95' : 'hover:scale-105'
-          } disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
+          disabled={totalPlayers === 0 || (enforceGoalkeeper && goalkeepers.length === 0) || isDrawing}
+          className="w-full"
         >
           {isDrawing ? (
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <div className="flex items-center gap-2" aria-live="polite">
+              <Loader2 className="h-4 w-4 animate-spin" />
               Sorteando...
             </div>
           ) : (
@@ -101,7 +127,7 @@ const TeamDrawer = ({ players, onDrawTeams }: TeamDrawerProps) => {
           )}
         </Button>
       </div>
-    </div>
+    </SectionCard>
   );
 };
 

@@ -272,7 +272,7 @@ const ExportButton = ({ players, teams }: ExportButtonProps) => {
     <Button
       onClick={exportToPDF}
       variant="outline"
-      className="flex items-center gap-2 bg-white border-gray-300 hover:bg-gray-50 transition-all hover:shadow-md"
+      className="flex w-full items-center justify-center gap-2 bg-card transition-all hover:shadow-md sm:w-auto"
     >
       <FileDown className="w-4 h-4" />
       Exportar PDF

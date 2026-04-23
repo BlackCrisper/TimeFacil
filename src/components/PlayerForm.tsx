@@ -3,10 +3,12 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { Player, PlayerPosition } from '@/types/player';
 import { positionConfig } from '@/utils/positionUtils';
+import SectionCard from './SectionCard';
 
 interface PlayerFormProps {
   onAddPlayer: (player: Omit<Player, 'id'>) => void;
@@ -15,6 +17,8 @@ interface PlayerFormProps {
 const PlayerForm = ({ onAddPlayer }: PlayerFormProps) => {
   const [playerName, setPlayerName] = useState('');
   const [playerPosition, setPlayerPosition] = useState<PlayerPosition>('so-linha');
+  const [useSkillLevel, setUseSkillLevel] = useState(false);
+  const [playerSkillLevel, setPlayerSkillLevel] = useState(3);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,27 +30,27 @@ const PlayerForm = ({ onAddPlayer }: PlayerFormProps) => {
       
       onAddPlayer({
         name: playerName.trim(),
-        position: playerPosition
+        position: playerPosition,
+        skillLevel: useSkillLevel ? playerSkillLevel : undefined
       });
       
       setPlayerName('');
       setPlayerPosition('so-linha');
+      setUseSkillLevel(false);
+      setPlayerSkillLevel(3);
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-3">
-        <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-          <Plus className="w-5 h-5 text-green-600" />
-        </div>
-        Adicionar Jogador
-      </h2>
-      
+    <SectionCard
+      title="Adicionar Jogador"
+      icon={<Plus className="h-5 w-5" />}
+      iconContainerClassName="bg-accent/15 text-accent"
+    >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="playerName" className="text-gray-700 font-medium">
+          <Label htmlFor="playerName" className="font-medium text-foreground/90">
             Nome do Jogador
           </Label>
           <Input
@@ -55,13 +59,12 @@ const PlayerForm = ({ onAddPlayer }: PlayerFormProps) => {
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
             placeholder="Digite o nome do jogador"
-            className="transition-all duration-200 focus:ring-2 focus:ring-green-500 focus:border-transparent"
             required
           />
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="playerPosition" className="text-gray-700 font-medium">
+          <Label htmlFor="playerPosition" className="font-medium text-foreground/90">
             Posição Preferida
           </Label>
           <Select value={playerPosition} onValueChange={(value: PlayerPosition) => setPlayerPosition(value)}>
@@ -80,17 +83,48 @@ const PlayerForm = ({ onAddPlayer }: PlayerFormProps) => {
             </SelectContent>
           </Select>
         </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between rounded-lg border border-border/70 bg-secondary/40 px-3 py-2">
+            <Label htmlFor="useSkillLevel" className="font-medium text-foreground/90">
+              Informar nível técnico
+            </Label>
+            <Switch
+              id="useSkillLevel"
+              checked={useSkillLevel}
+              onCheckedChange={setUseSkillLevel}
+            />
+          </div>
+          {useSkillLevel && (
+            <div className="space-y-2">
+              <Label htmlFor="playerSkillLevel" className="font-medium text-foreground/90">
+                Nível Técnico
+              </Label>
+              <Select value={String(playerSkillLevel)} onValueChange={(value) => setPlayerSkillLevel(Number(value))}>
+                <SelectTrigger id="playerSkillLevel" className="w-full">
+                  <SelectValue placeholder="Selecione o nível" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 - Iniciante</SelectItem>
+                  <SelectItem value="2">2 - Recreativo</SelectItem>
+                  <SelectItem value="3">3 - Intermediário</SelectItem>
+                  <SelectItem value="4">4 - Competitivo</SelectItem>
+                  <SelectItem value="5">5 - Avançado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
         
         <Button
           type="submit"
           disabled={isSubmitting || !playerName.trim()}
-          className={`w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 transform ${
-            isSubmitting ? 'scale-95' : 'hover:scale-105'
-          } disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
+          variant="default"
+          className="w-full"
         >
           {isSubmitting ? (
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <div className="flex items-center gap-2" aria-live="polite">
+              <Loader2 className="h-4 w-4 animate-spin" />
               Adicionando...
             </div>
           ) : (
@@ -101,7 +135,7 @@ const PlayerForm = ({ onAddPlayer }: PlayerFormProps) => {
           )}
         </Button>
       </form>
-    </div>
+    </SectionCard>
   );
 };
 

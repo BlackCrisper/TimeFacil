@@ -5,12 +5,17 @@ export interface Player {
   id: string;
   name: string;
   position: PlayerPosition;
+  skillLevel?: number;
 }
 
 export interface Team {
   id: number;
   players: Player[];
   isReserve?: boolean;
+  totalSkill?: number;
+  averageSkill?: number;
+  balanceScore?: number;
+  requiresGoalkeeper?: boolean;
 }
 
 export interface TeamPositions {
